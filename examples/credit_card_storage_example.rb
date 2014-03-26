@@ -1,4 +1,4 @@
-require ('../lib/HttpsCreditCardService.rb')
+require '../lib/salt_payment'
 
 url = "https://test.salt.com/gateway/creditcard/processor.do"
 merchantId = [your merchantId]
@@ -30,7 +30,7 @@ elsif (receipt.isApproved()!=false)
 		puts response.getApprovalInfo().authorizedAmount
 		puts response.getApprovalInfo().approvalCode
 	end
-	
+
 else
 	puts service.errorCode
 	puts service.errorMsg

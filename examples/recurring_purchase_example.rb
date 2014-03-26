@@ -1,4 +1,4 @@
-require('../lib/HttpsCreditCardService.rb')
+require '../lib/salt_payment'
 
 url = "https://test.salt.com/gateway/creditcard/processor.do"
 merchantId = [your merchant Id]
@@ -47,7 +47,7 @@ if approvalInfo !=nil
 	traceNumber = approvalInfo.getTraceNumber
 	referenceNumber = approvalInfo.getReferenceNumber
 
-	puts "Approval Info: "	
+	puts "Approval Info: "
 	puts "Authorized Amount: #{amount}"
 	puts "Approval Code: #{approvalCode}"
 	puts "Trace Number: #{traceNumber}"
@@ -94,7 +94,7 @@ if avsResponse !=nil
 	print "Street Matched: "
 	to_print(streetMatched)
 	print "Street Valid + Matched: "
-	to_print(isStreetFormatValidAndMatched)	
+	to_print(isStreetFormatValidAndMatched)
 end
 
 print "Cvv2 Response: "
@@ -128,8 +128,8 @@ if periodicPurchaseInfo != nil
 	else
 		prints "<null>\n"
 	end
-	puts "Per Payment Amount: " 
+	puts "Per Payment Amount: "
 	to_print(perPaymentAmount)
-	puts "Customer Id: " 
+	puts "Customer Id: "
 	to_print(customerId)
 end

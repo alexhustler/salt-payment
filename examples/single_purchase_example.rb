@@ -1,4 +1,4 @@
-require ('../lib/HttpsCreditCardService.rb')
+require '../lib/salt_payment'
 
 url = "https://test.salt.com/gateway/creditcard/processor.do"
 merchantId = "[your merchantId]"
@@ -30,4 +30,4 @@ else
 	puts service.errorMsg
 	puts service.errorCode
 end
-	
+
