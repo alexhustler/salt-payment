@@ -281,7 +281,7 @@ class HttpsCreditCardService
     appendHeader(req, "secureStorage")
     appendOperationType(req, "update")
     appendStorageTokenId(req, storageTokenId)
-    appendPaymentProfile(req, paymentProfile)
+    appendPaymentProfiles(req, paymentProfile)
     return send(req, "storage")
   end
 
