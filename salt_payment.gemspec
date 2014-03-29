@@ -5,8 +5,8 @@ Gem::Specification.new do |s|
   s.name        = "salt_payment"
   s.version     = SaltPayment::VERSION
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["Roman Lupiychuk"]
-  s.email       = ["roman@slatestudio.com"]
+  s.authors     = ["Roman Lupiychuk", 'Anton Konovalov']
+  s.email       = ["roman@slatestudio.com", 'anton@slatestudio.com']
   s.homepage    = "https://github.com/slate-studio/salt-payment"
   s.summary     = ""
 

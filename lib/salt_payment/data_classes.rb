@@ -268,23 +268,25 @@ class CustomerProfile
   attr_accessor :address2, :city, :province, :postal
   attr_accessor :country
 
-  def initialize()
-    @legalName = nil
-    @tradeName = nil
-    @website = nil
-    @firstName = nil
-    @lastName = nil
-    @phoneNumber = nil
-    @faxNumber = nil
-    @address1 = nil
-    @address2 = nil
-    @city = nil
-    @province = nil
-    @postal = nil
-    @country = nil
+  def initialize(legal_name = nil, trade_name = nil, website = nil, first_name = nil,
+    last_name = nil, phone_number = nil, fax_number = nil, address1 = nil, address2 = nil,
+    city = nil, province = nil, postal = nil, country = nil)
+    @legalName = legal_name
+    @tradeName = trade_name
+    @website = website
+    @firstName = first_name
+    @lastName = last_name
+    @phoneNumber = phone_number
+    @faxNumber = fax_number
+    @address1 = address1
+    @address2 = address2
+    @city = city
+    @province = province
+    @postal = postal
+    @country = country
   end
 
-  def isBlank()
+  def isBlank
     con1 = @firstName !=nil && !@firstName.empty?
     con2 = @lastName != nil && !@lastName.empty?
     con3 = @legalName !=nil && !@legalName.empty?
@@ -298,7 +300,7 @@ class CustomerProfile
     con11 = @website != nil && !@website.empty?
     con12 = @phoneNumber != nil && !@phoneNumber.empty?
     con13 = @faxNumber != nil && !@faxNumber.empty?
-    return !(con1||con2||con3||con4||con5||con6||con7||con8||con9||con10||con11|con12||con13)
+    !(con1||con2||con3||con4||con5||con6||con7||con8||con9||con10||con11|con12||con13)
   end
 end
 
@@ -390,19 +392,20 @@ class StorageReceipt
       customerProfileAvailable = @params["CUSTOMER_PROFILE_AVAILABLE"]
 
       if (customerProfileAvailable != nil && customerProfileAvailable)
-        profile = CustomerProfile.new()
-        profile.legalName = @params["CUSTOMER_PROFILE_LEGAL_NAME"]
-        profile.tradeName = @params["CUSTOMER_PROFILE_TRADE_NAME"]
-        profile.website = @params["CUSTOMER_PROFILE_WEBSITE"]
-        profile.firstName = @params["CUSTOMER_PROFILE_FIRST_NAME"]
-        profile.lastName = @params["CUSTOMER_PROFILE_LAST_NAME"]
-        profile.phoneNumber = @params["CUSTOMER_PROFILE_PHONE_NUMBER"]
-        profile.faxNumber = @params["CUSTOMER_PROFILE_FAX_NUMBER"]
-        profile.address1 = @params["CUSTOMER_PROFILE_ADDRESS1"]
-        profile.address2 = @params["CUSTOMER_PROFILE_ADDRESS2"]
-        profile.city = @params["CUSTOMER_PROFILE_CITY"]
-        profile.province = @params["CUSTOMER_PROFILE_PROVINCE"]
-        profile.postal = @params["CUSTOMER_PROFILE_COUNTRY"]
+        profile = CustomerProfile.new(
+          @params["CUSTOMER_PROFILE_LEGAL_NAME"],
+          @params["CUSTOMER_PROFILE_TRADE_NAME"],
+          @params["CUSTOMER_PROFILE_WEBSITE"],
+          @params["CUSTOMER_PROFILE_FIRST_NAME"],
+          @params["CUSTOMER_PROFILE_LAST_NAME"],
+          @params["CUSTOMER_PROFILE_PHONE_NUMBER"],
+          @params["CUSTOMER_PROFILE_FAX_NUMBER"],
+          @params["CUSTOMER_PROFILE_ADDRESS1"],
+          @params["CUSTOMER_PROFILE_ADDRESS2"],
+          @params["CUSTOMER_PROFILE_CITY"],
+          @params["CUSTOMER_PROFILE_PROVINCE"],
+          @params["CUSTOMER_PROFILE_COUNTRY"]
+        )
       end
 
       @paymentProfile = PaymentProfile.new(creditCard, profile)
