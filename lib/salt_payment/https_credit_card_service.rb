@@ -5,11 +5,11 @@ require 'net/https'
 
 # $log = Logger.new('log.txt')
 class HttpsCreditCardService
-  attr_reader :errorMsg
-  attr_reader :errorCode
+  attr_reader :error_msg
+  attr_reader :error_code
 
   def initialize(*args)
-    @marketSegment = $MARKET_SEGMENT_INTERNET
+    @market_segment = $market_segment_internet
 
     # HttpsCreditCardService (merchant, url)
     if args.size == 2
@@ -17,452 +17,450 @@ class HttpsCreditCardService
       @url = args[1]
     else
 
-    # HttpsCreditCardService (merchantId, apiToken, url)
-      @merchantId = args[0]
-      @apiToken = args[1]
+      # HttpsCreditCardService (merchantId, api_token, url)
+      @merchant_id = args[0]
+      @api_token = args[1]
       @url = args[2]
-      @merchant = Merchant.new(@merchantId, @apiToken)
+      @merchant = Merchant.new(@merchant_id, @api_token)
     end
   end
 
-  def refund(purchaseId, purchaseOrderId, refundOrderId, amount)
-    if purchaseOrderId == nil
-      raise InvalidRequest, "purchaseOrderId is required"
+  def refund(purchase_id, purchase_order_id, refund_order_id, amount)
+    if purchase_order_id == nil
+      raise InvalidRequest, 'purchase_order_id is required'
     end
 
     req = Hash::new
 
-    appendHeader(req, "refund")
-    appendTransactionId(req, purchaseId)
-    appendTransactionOrderId(req, purchaseOrderId)
-    if refundOrderId !=nil
-      appendOrderId(req, refundOrderId)
+    append_header(req, 'refund')
+    append_transaction_id(req, purchase_id)
+    append_transaction_order_id(req, purchase_order_id)
+    if refund_order_id !=nil
+      append_order_id(req, refund_order_id)
     end
-    appendAmount(req, amount)
-    return send(req, "creditcard")
+    append_amount(req, amount)
+    send(req, 'creditcard')
   end
 
-  def singlePurchase(orderId, creditCardSpecifier, amount, verificationRequest)
-    if creditCardSpecifier == nil
-      raise InvalidRequest, "creditcard or storageTokenId is required"
+  def single_purchase(order_id, credit_card_specifier, amount, verification_request)
+    if credit_card_specifier == nil
+      raise InvalidRequest, 'creditcard or storage_token_id is required'
     end
-      if orderId == nil
-      raise InvalidRequest, "orderId is required"
+    if order_id == nil
+      raise InvalidRequest, 'order_id is required'
     end
-      req = Hash::new
+    req = Hash::new
 
-    appendHeader(req, "singlePurchase")
-    appendOrderId(req, orderId)
-    if creditCardSpecifier.is_a?(String)
-      appendStorageTokenId(req, creditCardSpecifier)
+    append_header(req, 'singlePurchase')
+    append_order_id(req, order_id)
+    if credit_card_specifier.is_a?(String)
+      append_storage_token_id(req, credit_card_specifier)
     else
-      appendCreditCard(req, creditCardSpecifier)
+      append_credit_card(req, credit_card_specifier)
     end
-    appendAmount(req, amount)
-    appendVerificationRequest(req, verificationRequest)
-    return send(req, "creditcard")
+    append_amount(req, amount)
+    append_verification_request(req, verification_request)
+    send(req, 'creditcard')
+  end
+
+  def installment_purchase(order_id, credit_card, preinstallmentamount, start_date, total_number_installments, verification_request)
+    if order_id == nil
+      raise InvalidRequest, 'order_id is required'
     end
 
-  def installmentPurchase(orderId, creditCard, preinstallmentamount, startDate, totalNumberInstallments, verificationRequest)
-    if orderId == nil
-      raise InvalidRequest, "orderId is required"
-    end
-
-    if creditCard == nil
-      raise InvalidRequest, "creditCard is required"
+    if credit_card == nil
+      raise InvalidRequest, 'credit_card is required'
     end
 
     req = Hash::new
 
-    appendHeader(req, "installmentPurchase")
-    appendOrderId(req, orderId)
-    appendCreditCard(req, creditCard)
-    appendAmount(req, preinstallmentamount)
-    appendStartDate(req, startDate)
-    appendTotalNumberInstallments(req, totalNumberInstallments)
-    appendVerificationRequest(req, verificationRequest)
+    append_header(req, 'installmentPurchase')
+    append_order_id(req, order_id)
+    append_credit_card(req, credit_card)
+    append_amount(req, preinstallmentamount)
+    append_start_date(req, start_date)
+    append_total_number_installments(req, total_number_installments)
+    append_verification_request(req, verification_request)
 
-    return send(req, "creditcard")
+    send(req, 'creditcard')
   end
 
-  def recurringPurchase(orderId, creditCardSpecifier, perPaymentAmount, startDate, endDate, schedule, verificationRequest)
-    if orderId == nil
-      raise InvalidRequest, "orderId is required"
+  def recurring_purchase(order_id, credit_card_specifier, per_payment_amount, start_date, end_date, schedule, verification_request)
+    if order_id == nil
+      raise InvalidRequest, 'order_id is required'
     end
-    periodicPurchaseInfo = PeriodicPurchaseInfo.new(nil,nil,schedule, perPaymentAmount, orderId, nil, startDate, endDate, nil)
+    periodic_purchase_info = PeriodicPurchaseInfo.new(nil, nil, schedule, per_payment_amount, order_id, nil, start_date, end_date, nil)
 
-    return recurringPurchaseHelper(periodicPurchaseInfo, creditCardSpecifier, verificationRequest)
+    recurring_purchase_helper(periodic_purchase_info, credit_card_specifier, verification_request)
   end
 
-  def recurringPurchase2(periodicPurchaseInfo, creditCardSpecifier, verificationRequest)
-    if periodicPurchaseInfo.orderId == nil
-      raise InvalidRequest, "orderId is required"
+  def recurring_purchase2(periodic_purchase_info, credit_card_specifier, verification_request)
+    if periodic_purchase_info.order_id == nil
+      raise InvalidRequest, 'order_id is required'
     end
-    return recurringPurchaseHelper(periodicPurchaseInfo, creditCardSpecifier, verificationRequest)
+    recurring_purchase_helper(periodic_purchase_info, credit_card_specifier, verification_request)
   end
 
-  def recurringPurchaseHelper(periodicPurchaseInfo, creditCardSpecifier, verificationRequest)
-    if creditCardSpecifier == nil
-      raise InvalidRequest, "creditcard or storageTokenId is required"
+  def recurring_purchase_helper(periodic_purchase_info, credit_card_specifier, verification_request)
+    if credit_card_specifier == nil
+      raise InvalidRequest, 'creditcard or storage_token_id is required'
     end
 
     req = Hash::new
-    appendHeader(req, "recurringPurchase")
-    appendOperationType(req, "create")
-    appendPeriodicPurchaseInfo(req, periodicPurchaseInfo)
-    appendVerificationRequest(req, verificationRequest)
+    append_header(req, 'recurringPurchase')
+    append_operation_type(req, 'create')
+    append_periodic_purchase_info(req, periodic_purchase_info)
+    append_verification_request(req, verification_request)
 
-    if creditCardSpecifier.is_a?(String)
-      appendStorageTokenId(req, creditCardSpecifier)
-      return send(req, "storage")
+    if credit_card_specifier.is_a?(String)
+      append_storage_token_id(req, credit_card_specifier)
+      send(req, 'storage')
     else
-      appendCreditCard(req, creditCardSpecifier)
-      return send(req, "creditcard")
+      append_credit_card(req, credit_card_specifier)
+      send(req, 'creditcard')
     end
   end
 
-  def holdRecurringPurchase(recurringPurchaseId)
-    periodicPurchaseInfo = PeriodicPurchaseInfo.new(recurringPurchaseId, $ON_HOLD, nil, nil, nil, nil, nil, nil, nil)
-    return updateRecurringPurchaseHelper(periodicPurchaseInfo, nil, nil)
+  def hold_recurring_purchase(recurring_purchase_id)
+    periodic_purchase_info = PeriodicPurchaseInfo.new(recurring_purchase_id, $on_hold, nil, nil, nil, nil, nil, nil, nil)
+    update_recurring_purchase_helper(periodic_purchase_info, nil, nil)
   end
 
-  def resumeRecurringPurchase(recurringPurchaseId)
-    periodicPurchaseInfo = PeriodicPurchaseInfo.new(recurringPurchaseId, $IN_PROGRESS, nil, nil, nil, nil, nil, nil, nil)
-    return updateRecurringPurchaseHelper(periodicPurchaseInfo, nil, nil)
+  def resume_recurring_purchase(recurring_purchase_id)
+    periodic_purchase_info = PeriodicPurchaseInfo.new(recurring_purchase_id, $in_progress, nil, nil, nil, nil, nil, nil, nil)
+    update_recurring_purchase_helper(periodic_purchase_info, nil, nil)
   end
 
-  def cancelRecurringPurchase(recurringPurchaseId)
-    periodicPurchaseInfo = PeriodicPurchaseInfo.new(recurringPurchaseId, $CANCELLED, nil, nil, nil, nil, nil, nil, nil)
-    return updateRecurringPurchaseHelper(periodicPurchaseInfo, nil, nil)
+  def cancel_recurring_purchase(recurring_purchase_id)
+    periodic_purchase_info = PeriodicPurchaseInfo.new(recurring_purchase_id, $cancelled, nil, nil, nil, nil, nil, nil, nil)
+    update_recurring_purchase_helper(periodic_purchase_info, nil, nil)
   end
 
-  def queryRecurringPurchase(recurringPurchaseId)
-    if recurringPurchaseId == nil
-      raise InvalidRequest, "recurringPurchaseId is required"
+  def query_recurring_purchase(recurring_purchase_id)
+    if recurring_purchase_id == nil
+      raise InvalidRequest, 'recurring_purchase_id is required'
     end
 
     req = Hash::new
-    appendHeader(req, "recurringPurchase")
-    appendOperationType(req, "query")
-    appendTransactionId(req, recurringPurchaseId)
+    append_header(req, 'recurringPurchase')
+    append_operation_type(req, 'query')
+    append_transaction_id(req, recurring_purchase_id)
 
-    return send(req, "creditcard")
+    send(req, 'creditcard')
   end
 
-  def updateRecurringPurchase(recurringPurchaseId, creditCardSpecifier, perPaymentAmount, verificationRequest, state)
-    if recurringPurchaseId == nil
-      raise InvalidRequest, "recurringPurchaseId is required"
+  def update_recurring_purchase(recurring_purchase_id, credit_card_specifier, per_payment_amount, verification_request, state)
+    if recurring_purchase_id == nil
+      raise InvalidRequest, 'recurring_purchase_id is required'
     end
-    periodicPurchaseInfo = PeriodicPurchaseInfo.new(recurringPurchaseId, state, nil, perPaymentAmount, nil, nil, nil, nil, nil)
-    return updateRecurringPurchaseHelper(periodicPurchaseInfo, creditCardSpecifier, verificationRequest)
+    periodic_purchase_info = PeriodicPurchaseInfo.new(recurring_purchase_id, state, nil, per_payment_amount, nil, nil, nil, nil, nil)
+    update_recurring_purchase_helper(periodic_purchase_info, credit_card_specifier, verification_request)
   end
 
-  def updateRecurringPurchase2(periodicPurchaseInfo, creditCardSpecifier, verificationRequest)
-    if (periodicPurchaseInfo.periodicTransactionId == nil)
-      raise InvalidRequest, "recurringPurchaseId is required"
+  def update_recurring_purchase2(periodic_purchase_info, credit_card_specifier, verification_request)
+    if periodic_purchase_info.periodic_transaction_id == nil
+      raise InvalidRequest, 'recurring_purchase_id is required'
     end
-    return updateRecurringPurchaseHelper(periodicPurchaseInfo, creditCardSpecifier, verificationRequest)
+    update_recurring_purchase_helper(periodic_purchase_info, credit_card_specifier, verification_request)
   end
 
-  def updateRecurringPurchaseHelper(periodicPurchaseInfo, creditCardSpecifier, verificationRequest)
+  def update_recurring_purchase_helper(periodic_purchase_info, credit_card_specifier, verification_request)
     req = Hash::new
-    appendHeader(req, "recurringPurchase")
-    appendOperationType(req, "update")
-    appendTransactionId(req, periodicPurchaseInfo.periodicTransactionId)
-    if verificationRequest != nil
-      appendVerificationRequest(req, verificationRequest)
+    append_header(req, 'recurringPurchase')
+    append_operation_type(req, 'update')
+    append_transaction_id(req, periodic_purchase_info.periodic_transaction_id)
+    if verification_request != nil
+      append_verification_request(req, verification_request)
     end
-    appendPeriodicPurchaseInfo(req, periodicPurchaseInfo)
-    if creditCardSpecifier !=nil
-      if creditCardSpecifier.is_a?(String)
-        appendStorageTokenId(req, creditCardSpecifier)
-        return send(req, "storage")
+    append_periodic_purchase_info(req, periodic_purchase_info)
+    if credit_card_specifier !=nil
+      if credit_card_specifier.is_a?(String)
+        append_storage_token_id(req, credit_card_specifier)
+        return send(req, 'storage')
       else
-        appendCreditCard(req, creditCardSpecifier)
+        append_credit_card(req, credit_card_specifier)
       end
     end
-    send(req,"creditcard")
+    send(req, 'creditcard')
   end
 
-  def verifyCreditCard(creditCardSpecifier, verificationRequest)
-    if creditCardSpecifier == nil
-      raise InvalidRequest, "credit card or storageTokenId is required"
+  def verify_credit_card(credit_card_specifier, verification_request)
+    if credit_card_specifier == nil
+      raise InvalidRequest, 'credit card or storage_token_id is required'
     end
 
-    if verificationRequest == nil
-      raise InvalidRequest, "verificationRequest is required"
+    if verification_request == nil
+      raise InvalidRequest, 'verification_request is required'
     end
 
     req = Hash::new
-    appendHeader(req, "verifyCreditCard")
-    if creditCardSpecifier.is_a?(String)
-      appendStorageTokenId(req, creditCardSpecifier)
+    append_header(req, 'verifyCreditCard')
+    if credit_card_specifier.is_a?(String)
+      append_storage_token_id(req, credit_card_specifier)
     else
-      appendCreditCard(req, creditCardSpecifier)
+      append_credit_card(req, credit_card_specifier)
     end
-    appendVerificationRequest(req, verificationRequest)
-    return send(req, "creditcard")
+    append_verification_request(req, verification_request)
+    send(req, 'creditcard')
   end
 
-  def voidTransaction(transactionId, transactionOrderId)
-    if transactionOrderId == nil
-      raise InvalidRequest, "transactionOrderId is required"
+  def void_transaction(transaction_id, transaction_order_id)
+    if transaction_order_id == nil
+      raise InvalidRequest, 'transaction_order_id is required'
     end
     req = Hash::new
-    appendHeader(req, "void")
-    appendTransactionId(req, transactionId)
-    appendTransactionOrderId(req, transactionOrderId)
-    return send(req, "creditcard")
+    append_header(req, 'void')
+    append_transaction_id(req, transaction_id)
+    append_transaction_order_id(req, transaction_order_id)
+    send(req, 'creditcard')
   end
 
-  def verifyTransaction(transactionId, transactionOrderId)
+  def verify_transaction(transaction_id, transaction_order_id)
 
-    if (transactionOrderId == nil || transactionId == nil)
-      raise InvalidRequest, "either transactionId or transactionOrderId is required"
-    end
-
-    req = Hash::new
-    appendHeader(req, "verifyTransaction")
-    if (transactionId != nil)
-      appendTransactionId(req, transactionId)
-    end
-    if (transactionOrderId != nil)
-      appendTransactionOrderId(req, transactionOrderId)
-    end
-    return send(req, "creditcard")
-  end
-
-  def addToStorage(storageTokenId, paymentProfile)
-    if (paymentProfile == nil)
-      raise InvalidRequest, "payment profile is required"
+    if transaction_order_id == nil || transaction_id == nil
+      raise InvalidRequest, 'either transaction_id or transaction_order_id is required'
     end
 
     req = Hash::new
-
-    appendHeader(req, "secureStorage")
-    appendOperationType(req, "create")
-    appendStorageTokenId(req, storageTokenId)
-    appendPaymentProfiles(req, paymentProfile)
-    return send(req, "storage")
+    append_header(req, 'verifyTransaction')
+    if transaction_id != nil
+      append_transaction_id(req, transaction_id)
+    end
+    if transaction_order_id != nil
+      append_transaction_order_id(req, transaction_order_id)
+    end
+    send(req, 'creditcard')
   end
 
-  def deleteFromStorage(storageTokenId)
-    if storageTokenId == nil
-      raise InvalidRequest, "storageTokenId is required"
+  def add_to_storage(storage_token_id, payment_profile)
+    if payment_profile == nil
+      raise InvalidRequest, 'payment profile is required'
     end
 
     req = Hash::new
-    appendHeader(req, "secureStorage")
-    appendOperationType(req, "delete")
-    appendStorageTokenId(req, storageTokenId)
-    return send(req, "storage")
+
+    append_header(req, 'secureStorage')
+    append_operation_type(req, 'create')
+    append_storage_token_id(req, storage_token_id)
+    append_payment_profiles(req, payment_profile)
+    send(req, 'storage')
   end
 
-  def queryStorage(storageTokenId)
-    if storageTokenId == nil
-      raise InvalidRequest, "storageTokenId is required"
+  def delete_from_storage(storage_token_id)
+    if storage_token_id == nil
+      raise InvalidRequest, 'storage_token_id is required'
     end
 
     req = Hash::new
-    appendHeader(req, "secureStorage")
-    appendOperationType(req, "query")
-    appendStorageTokenId(req, storageTokenId)
-    return send(req, "storage")
+    append_header(req, 'secureStorage')
+    append_operation_type(req, 'delete')
+    append_storage_token_id(req, storage_token_id)
+    send(req, 'storage')
   end
 
-  def updateStorage(storageTokenId, paymentProfile)
-    if storageTokenId == nil
-      raise InvalidRequest, "storageTokenId is required"
+  def query_storage(storage_token_id)
+    if storage_token_id == nil
+      raise InvalidRequest, 'storage_token_id is required'
     end
-    if paymentProfile == nil
-      raise InvalidRequest, "payment profile is required"
+
+    req = Hash::new
+    append_header(req, 'secureStorage')
+    append_operation_type(req, 'query')
+    append_storage_token_id(req, storage_token_id)
+    send(req, 'storage')
+  end
+
+  def update_storage(storage_token_id, payment_profile)
+    if storage_token_id == nil
+      raise InvalidRequest, 'storage_token_id is required'
+    end
+    if payment_profile == nil
+      raise InvalidRequest, 'payment profile is required'
     end
     req = Hash::new
-    appendHeader(req, "secureStorage")
-    appendOperationType(req, "update")
-    appendStorageTokenId(req, storageTokenId)
-    appendPaymentProfiles(req, paymentProfile)
-    return send(req, "storage")
+    append_header(req, 'secureStorage')
+    append_operation_type(req, 'update')
+    append_storage_token_id(req, storage_token_id)
+    append_payment_profiles(req, payment_profile)
+    send(req, 'storage')
   end
 
-  def appendAmount(req, amount)
-    return appendParam(req, "amount", amount)
+  def append_amount(req, amount)
+    append_param(req, 'amount', amount)
   end
 
-  def appendApiToken(req, apiToken)
-    return appendParam(req, "apiToken", apiToken)
+  def append_api_token(req, api_token)
+    append_param(req, 'apiToken', api_token)
   end
 
-  def appendCreditCard(req, creditCard)
-    if creditCard != nil
-      appendParam(req, "creditCardNumber", creditCard.getCreditCardNumber)
-      appendParam(req, "expiryDate", creditCard.getExpiryDate)
-      appendParam(req, "cvv2", creditCard.getCvv2)
-      appendParam(req, "street", creditCard.getStreet)
-      appendParam(req, "zip", creditCard.getZip)
-      appendParam(req, "secureCode", creditCard.getSecureCode)
+  def append_credit_card(req, credit_card)
+    if credit_card != nil
+      append_param(req, 'creditCardNumber', credit_card.get_credit_card_number)
+      append_param(req, 'expiryDate', credit_card.get_expiry_date)
+      append_param(req, 'cvv2', credit_card.get_cvv2)
+      append_param(req, 'street', credit_card.get_street)
+      append_param(req, 'zip', credit_card.get_zip)
+      append_param(req, 'secureCode', credit_card.get_secure_code)
     end
   end
 
-  def appendHeader(req, requestCode)
-    appendParam(req, "requestCode", requestCode)
-    appendMerchantId(req, @merchant.merchantId)
-    appendApiToken(req, @merchant.apiToken)
-    appendParam(req, "marketSegmentCode", @marketSegment)
+  def append_header(req, request_code)
+    append_param(req, 'requestCode', request_code)
+    append_merchant_id(req, @merchant.merchant_id)
+    append_api_token(req, @merchant.api_token)
+    append_param(req, 'marketSegmentCode', @market_segment)
   end
 
-  def appendOperationType(req, type)
+  def append_operation_type(req, type)
     if type!= nil
-      return appendParam(req, "operationCode", type)
+      append_param(req, 'operationCode', type)
     end
   end
 
-  def appendPeriodicPurchaseState(req, state)
+  def append_periodic_purchase_state(req, state)
     if state != nil
-      return appendParam(req, "periodicPurchaseStateCode", state)
+      append_param(req, 'periodicPurchaseStateCode', state)
     end
   end
 
-  def appendPeriodicPurchaseSchedule(req, schedule)
+  def append_periodic_purchase_schedule(req, schedule)
     if schedule != nil
-      appendParam(req, "periodicPurchaseScheduleTypeCode", schedule.scheduleType)
-      appendParam(req, "periodicPurchaseIntervalLength", schedule.intervalLength)
+      append_param(req, 'periodicPurchaseScheduleTypeCode', schedule.schedule_type)
+      append_param(req, 'periodicPurchaseIntervalLength', schedule.interval_length)
     end
   end
 
-  def appendPeriodicPurchaseTransactionId (req, periodicTransactionId)
-    appendParam(req, "periodicTransactionId", periodicTransactionId)
+  def append_periodic_purchase_transaction_id (req, periodic_transaction_id)
+    append_param(req, 'periodicTransactionId', periodic_transaction_id)
   end
 
-  def appendPeriodicPurchaseInfo (req, periodicPurchaseInfo)
-    appendPeriodicPurchaseTransactionId(req, periodicPurchaseInfo.periodicTransactionId)
-    if periodicPurchaseInfo.perPaymentAmount != nil
-      appendAmount(req, periodicPurchaseInfo.perPaymentAmount)
+  def append_periodic_purchase_info (req, periodic_purchase_info)
+    append_periodic_purchase_transaction_id(req, periodic_purchase_info.periodic_transaction_id)
+    if periodic_purchase_info.per_payment_amount != nil
+      append_amount(req, periodic_purchase_info.per_payment_amount)
     end
 
-    if periodicPurchaseInfo.state !=nil
-      appendPeriodicPurchaseState(req, periodicPurchaseInfo.state)
+    if periodic_purchase_info.state !=nil
+      append_periodic_purchase_state(req, periodic_purchase_info.state)
     end
 
-    if periodicPurchaseInfo.schedule !=nil
-      appendPeriodicPurchaseSchedule(req, periodicPurchaseInfo.schedule)
+    if periodic_purchase_info.schedule !=nil
+      append_periodic_purchase_schedule(req, periodic_purchase_info.schedule)
     end
 
-    if periodicPurchaseInfo.orderId !=nil
-      appendOrderId(req, periodicPurchaseInfo.orderId)
+    if periodic_purchase_info.order_id !=nil
+      append_order_id(req, periodic_purchase_info.order_id)
     end
 
-    if periodicPurchaseInfo.customerId !=nil
-      appendParam(req, "customerId", periodicPurchaseInfo.customerId)
+    if periodic_purchase_info.customer_id !=nil
+      append_param(req, 'customerId', periodic_purchase_info.customer_id)
     end
 
-    if periodicPurchaseInfo.startDate !=nil
-      appendStartDate(req, periodicPurchaseInfo.startDate)
+    if periodic_purchase_info.start_date !=nil
+      append_start_date(req, periodic_purchase_info.start_date)
     end
 
-    if periodicPurchaseInfo.endDate != nil
-      appendEndDate(req, periodicPurchaseInfo.endDate)
+    if periodic_purchase_info.end_date != nil
+      append_end_date(req, periodic_purchase_info.end_date)
     end
 
-    if periodicPurchaseInfo.nextPaymentDate !=nil
-      appendParam(req, "nextPaymentDate" , periodicPurchaseInfo.nextPaymentDate)
+    if periodic_purchase_info.next_payment_date !=nil
+      append_param(req, 'nextPaymentDate', periodic_purchase_info.next_payment_date)
     end
   end
 
-  def appendMerchantId(req, merchantId)
-    if merchantId.kind_of? String
-      appendParam(req, "merchantId", merchantId.to_i)
+  def append_merchant_id(req, merchant_id)
+    if merchant_id.kind_of? String
+      append_param(req, 'merchantId', merchant_id.to_i)
     else
-      appendParam(req, "merchantId", merchantId)
+      append_param(req, 'merchantId', merchant_id)
     end
   end
 
-  def appendOrderId(req, orderId)
-    return appendParam(req, "orderId", orderId)
+  def append_order_id(req, order_id)
+    append_param(req, 'orderId', order_id)
   end
 
-  def appendParam(req, name, value)
+  def append_param(req, name, value)
     if name.nil?
       return
     end
 
-    if !value.nil?
+    unless value.nil?
       req[name] = value
     end
   end
 
-  def appendTransactionId(req, transactionId)
-    return appendParam(req, "transactionId", transactionId)
+  def append_transaction_id(req, transaction_id)
+    append_param(req, 'transactionId', transaction_id)
   end
 
-  def appendTransactionOrderId(req, transactionOrderId)
-    return appendParam(req, "transactionOrderId", transactionOrderId)
+  def append_transaction_order_id(req, transaction_order_id)
+    append_param(req, 'transactionOrderId', transaction_order_id)
   end
 
-  def appendVerificationRequest(req, vr)
+  def append_verification_request(req, vr)
     if vr != nil
-      appendParam(req, "avsRequestCode", vr.getAvsRequest)
-      appendParam(req, "cvv2RequestCode", vr.getCvv2Request)
+      append_param(req, 'avsRequestCode', vr.get_avs_request)
+      append_param(req, 'cvv2RequestCode', vr.get_cvv2_request)
     end
   end
 
-  def appendStorageTokenId(req, storageTokenId)
-    return appendParam(req, "storageTokenId", storageTokenId)
+  def append_storage_token_id(req, storage_token_id)
+    append_param(req, 'storageTokenId', storage_token_id)
   end
 
-  def appendTotalNumberInstallments(req, totalNumberInstallments)
-    return appendParam(req, "totalNumberInstallments", totalNumberInstallments)
+  def append_total_number_installments(req, total_number_installments)
+    append_param(req, 'totalNumberInstallments', total_number_installments)
   end
 
-  def appendStartDate(req, startDate)
-    if startDate != nil
-      return appendParam(req, "startDate", startDate)
+  def append_start_date(req, start_date)
+    if start_date != nil
+      append_param(req, 'startDate', start_date)
     end
   end
 
-  def appendEndDate(req, endDate)
-    if endDate != nil
-      return appendParam(req, "endDate", endDate)
+  def append_end_date(req, end_date)
+    if end_date != nil
+      append_param(req, 'endDate', end_date)
     end
   end
 
-  def appendPaymentProfiles(req, paymentProfile)
-    if paymentProfile == nil
-      return
-    else
-      if paymentProfile.getCreditCard != nil
-        appendCreditCard(req, paymentProfile.getCreditCard)
+  def append_payment_profiles(req, payment_profile)
+    unless payment_profile == nil
+      if payment_profile.get_credit_card != nil
+        append_credit_card(req, payment_profile.get_credit_card)
       end
-      if paymentProfile.getCustomerProfile != nil
-        appendParam(req, "profileLegalName", paymentProfile.getCustomerProfile.legalName)
-        appendParam(req, "profileTradeName", paymentProfile.getCustomerProfile.tradeName)
-        appendParam(req, "profileWebsite", paymentProfile.getCustomerProfile.website)
-        appendParam(req, "profileFirstName", paymentProfile.getCustomerProfile.firstName)
-        appendParam(req, "profileLastName", paymentProfile.getCustomerProfile.lastName)
-        appendParam(req, "profilePhoneNumber", paymentProfile.getCustomerProfile.phoneNumber)
-        appendParam(req, "profileFaxNumber", paymentProfile.getCustomerProfile.faxNumber)
-        appendParam(req, "profileAddress1", paymentProfile.getCustomerProfile.address1)
-        appendParam(req, "profileAddress2", paymentProfile.getCustomerProfile.address2)
-        appendParam(req, "profileCity", paymentProfile.getCustomerProfile.city)
-        appendParam(req, "profileProvince", paymentProfile.getCustomerProfile.province)
-        appendParam(req, "profilePostal", paymentProfile.getCustomerProfile.postal)
-        appendParam(req, "profileCountry", paymentProfile.getCustomerProfile.country)
+      if payment_profile.get_customer_profile != nil
+        append_param(req, 'profileLegalName', payment_profile.get_customer_profile.legal_name)
+        append_param(req, 'profileTradeName', payment_profile.get_customer_profile.trade_name)
+        append_param(req, 'profileWebsite', payment_profile.get_customer_profile.website)
+        append_param(req, 'profileFirstName', payment_profile.get_customer_profile.first_name)
+        append_param(req, 'profileLastName', payment_profile.get_customer_profile.last_name)
+        append_param(req, 'profilePhoneNumber', payment_profile.get_customer_profile.phone_number)
+        append_param(req, 'profileFaxNumber', payment_profile.get_customer_profile.fax_number)
+        append_param(req, 'profileAddress1', payment_profile.get_customer_profile.address1)
+        append_param(req, 'profileAddress2', payment_profile.get_customer_profile.address2)
+        append_param(req, 'profileCity', payment_profile.get_customer_profile.city)
+        append_param(req, 'profileProvince', payment_profile.get_customer_profile.province)
+        append_param(req, 'profilePostal', payment_profile.get_customer_profile.postal)
+        append_param(req, 'profileCountry', payment_profile.get_customer_profile.country)
       end
     end
   end
 
-  def send(request, receiptType)
-    if (request == nil && receiptType == "creditcard")
-      raise InvalidRequest, "a request string is required 25"
+  def send(request, receipt_type)
+    if request == nil && receipt_type == 'creditcard'
+      raise InvalidRequest, 'a request string is required 25'
     end
-    if (request == nil && receiptType == "storage")
-      raise InvalidRequest, "a request string is required"
+    if request == nil && receipt_type == 'storage'
+      raise InvalidRequest, 'a request string is required'
     end
 
-    queryPairs = Array.new
+    query_pairs = Array.new
 
-    request.each{|key, value| queryPairs<< CGI::escape("#{key}")+"="+CGI::escape("#{value}")}
-    query = queryPairs.join("&")
+    request.each { |key, value| query_pairs<< CGI::escape("#{key}")+'='+CGI::escape("#{value}") }
+    query = query_pairs.join('&')
 
     receipt = nil
     response = nil
@@ -475,31 +473,31 @@ class HttpsCreditCardService
       http = Net::HTTP.new(server, 443)
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      headers = {'Content-Type'=>'application/x-www-form-urlencoded'}
+      headers = {'Content-Type' => 'application/x-www-form-urlencoded'}
       response, data = http.post(path, query, headers)
     rescue
-      @errorMsg = "error attempting to send POST data"
-      @errorCode = $REQ_POST_ERROR
+      @error_msg = 'error attempting to send POST data'
+      @error_code = $req_post_error
       return nil
     end
     begin
       case response
-      when Net::HTTPSuccess
-        if receiptType =="creditcard"
-          receipt = CreditCardReceipt.new(response.body)
-        end
-        if receiptType == "storage"
-          receipt = StorageReceipt.new(response.body)
-        end
-      else
-        @errorMsg = "HTTP error code attempting to send POST request: #{response.code}"
-        @errorCode = $REQ_POST_ERROR
+        when Net::HTTPSuccess
+          if receipt_type =='creditcard'
+            receipt = CreditCardReceipt.new(response.body)
+          end
+          if receipt_type == 'storage'
+            receipt = StorageReceipt.new(response.body)
+          end
+        else
+          @error_msg = "HTTP error code attempting to send POST request: #{response.code}"
+          @error_code = $req_post_error
       end
     rescue
-      @errorMsg = "Could not parse response from the CreditCard gateway"
-      @errorCode = $REQ_RESPONSE_ERROR
+      @error_msg = 'Could not parse response from the CreditCard gateway'
+      @error_code = $req_response_error
       return nil
     end
-    return receipt
+    receipt
   end
 end
